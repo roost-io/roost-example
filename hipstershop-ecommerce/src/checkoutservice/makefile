@@ -1,2 +1,4 @@
-all:
-	go build -gcflags='-N -l' -o checkoutservice .
+MICROSERVICE_NAME=checkoutservice
+
+build:
+	go build -o ${MICROSERVICE_NAME} -i -mod vendor -modfile ../../go.mod -gcflags='-N -l' github.com/roost-io/roost-example/hipstershop-ecommerce/src/${MICROSERVICE_NAME}

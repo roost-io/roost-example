@@ -17,7 +17,7 @@ GRPC_HEALTH_PROBE_PATH=../tool/${GRPC_HEALTH_PROBE}
 
 HOSTNAME := $(shell hostname -f)
 
-SUBDIRS = src
+GO_SERVICES = src/${PRODUCT_CATALOG_SERVICE_IMG} src/${SHIPPING_SERVICE_IMG} src/${CHECKOUTSERVICE_IMG} src/${FRONTEND_IMG}
 MICROSERVICES = ${EMAIL_SERVICE_IMG} \
 				${PRODUCT_CATALOG_SERVICE_IMG} \
 				${RECOMMENDATION_SERVICE_IMG}	\
@@ -30,6 +30,8 @@ MICROSERVICES = ${EMAIL_SERVICE_IMG} \
 				${LOAD_GENERATOR_IMG}	\
 				${ADDSERVICE_IMG}
 
+SERVICE_GRPC_BIN = $(foreach microservice, ${MICROSERVICES}, "src/${microservice}"/${GRPC_HEALTH_PROBE})
+
 .PHONY: all
 all: clean prerequisites dockerise deploy
 	$(MAKE) clean_bin
@@ -41,7 +43,11 @@ prerequisites:
 			cp ${GRPC_HEALTH_PROBE_PATH} src/$${service}; \
 		fi; \
 	done
-	for d in $(SUBDIRS); do echo "<==> Target $@ for $$d <==>"; $(MAKE) -C $$d $@; echo "========="; done
+
+.PHONY: build
+build:
+	# go build -o src/checkoutservice/bin/checkoutservice -i -mod vendor -modfile go.mod -gcflags='-N -l' github.com/roost-io/roost-example/hipstershop-ecommerce/src/checkoutservice
+	for d in $(GO_SERVICES); do echo "<==> Target $@ for $$d <==>"; $(MAKE) -C $$d $@; echo "========="; done
 
 .PHONY: dockerise
 dockerise:
@@ -59,8 +65,20 @@ clean: clean_bin
 
 .SILENT:
 clean_bin:
-	for service in ${MICROSERVICES}; do \
-		if [ -f "src/$${service}/${GRPC_HEALTH_PROBE}" ]; then \
-			rm -f src/$${service}/${GRPC_HEALTH_PROBE}; \
-		fi; \
-	done
+	# -rm -f ${SERVICE_GRPC_BIN}
+	#for service in ${MICROSERVICES}; do \
+		echo $${service}
+		# if [ -f "src/$${service}/$${service}" ]; then \
+		# 	rm -f src/$${service}/$${service}; \
+		# fi; \
+
+		# if [ -f "src/$${service}/${GRPC_HEALTH_PROBE}" ]; then \
+		# 	rm -f src/$${service}/${GRPC_HEALTH_PROBE}; \
+		# fi; \
+	
+#	done
+
+test:
+	@(for grpc_bin in ${SERVICE_GRPC_BIN}; do \
+		echo $${grpc_bin}; done;	\
+	)
