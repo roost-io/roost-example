@@ -11,21 +11,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
 
-	"github.com/ZB-io/zbio/client/config"
 	"github.com/ZB-io/zbio/log"
 	pbcommon "github.com/ZB-io/zbio/rpc/common"
 	pbservice "github.com/ZB-io/zbio/rpc/service"
-	zbgrpctracer "github.com/ZB-io/zbio/service/middleware/tracer"
-	zbtracer "github.com/ZB-io/zbio/tracer"
-	"github.com/ZB-io/zbio/util"
-
-	//TODO: Instead of using service/middle/tracing either set middleware for every microservices or at zbio level
+	// "github.com/ZB-io/zbio/util"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -33,20 +29,15 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/opentracing/opentracing-go"
-	"go.opentelemetry.io/otel/api/core"
-	"go.opentelemetry.io/otel/api/global"
-	otkey "go.opentelemetry.io/otel/api/key"
-	"go.opentelemetry.io/otel/api/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 var (
-	rootDir = clientRootDir()
-	tracer  = opentracing.GlobalTracer()
-	// MaxMsgSize is maximum allowed size for a test message
+	rootDir         = clientRootDir()
+	crt             = filepath.Join(rootDir, "security/cert/server.crt")
+	tracer          = opentracing.GlobalTracer()
 	MaxMsgSize      = 64 * 1024 * 1024 // 64 MB default
 	msgReadInterval = 200 * time.Millisecond
 )
@@ -126,10 +117,15 @@ type MessageResponse struct {
 	status []map[string]int32
 }
 
-func New(cfg Config) (*Client, error) {
-	config.InitTrace()
+func init() {
+	if val := os.Getenv("SERVER_CRT"); val != "" {
+		crt = val
+	}
+}
 
-	log.Debugf("clientName is: %s\tzbio service endpoint is: %s\n", cfg.Name, cfg.ServiceEndPoint)
+func New(cfg Config) (*Client, error) {
+
+	log.Printf("Clientname : %s, serviceEndPoint is %s", cfg.Name, cfg.ServiceEndPoint)
 
 	//example with a 100ms linear backoff interval, and retry only on NotFound and Unavailable.
 	opts := []grpcretry.CallOption{
@@ -148,30 +144,27 @@ func New(cfg Config) (*Client, error) {
 	creds := credentials.NewTLS(TLSConfig)
 
 	// Set up a connection to the server.
-	conn, err := grpc.DialContext(GetClientContext(cfg),
+	if conn, err := grpc.DialContext(context.WithValue(context.Background(), "user_id", cfg.Name),
 		cfg.ServiceEndPoint,
 		grpc.WithTransportCredentials(creds),
-		grpc.WithBlock(),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(MaxMsgSize),
 			grpc.MaxCallSendMsgSize(MaxMsgSize),
 		),
 		grpc.WithUnaryInterceptor(grpcmiddleware.ChainUnaryClient(
-			// otgrpc.OpenTracingClientInterceptor(tracer),
+			otgrpc.OpenTracingClientInterceptor(tracer),
 			grpcretry.UnaryClientInterceptor(opts...),
-			zbgrpctracer.UnaryClientInterceptor,
 		)),
-		grpc.WithStreamInterceptor(otgrpc.OpenTracingStreamClientInterceptor(tracer)))
-
-	if err != nil {
+		grpc.WithStreamInterceptor(otgrpc.OpenTracingStreamClientInterceptor(tracer))); err != nil {
 		log.Fatalf("couldn't connect %v", err)
 		return nil, err
+	} else {
+		return &Client{
+			conn:   conn,
+			Config: cfg,
+			zbCli:  pbservice.NewServiceClient(conn),
+		}, nil
 	}
-	return &Client{
-		conn:   conn,
-		Config: cfg,
-		zbCli:  pbservice.NewServiceClient(conn),
-	}, nil
 }
 
 func clientRootDir() string {
@@ -187,27 +180,10 @@ func (cli *Client) Close() {
 func (cli *Client) ZbTest(str string) (string, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-
 	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
-	//	ctx = opentracing.ContextWithSpan(ctx, span)
 	defer cancel()
-
-	/*
-		span := tracer.StartSpan("requestAtClientSide", opentracing.StartTime(time.Now()))
-		defer span.Finish()
-	*/
-
-	var span zbtracer.Span
-	tr := zbtracer.New(zbtracer.TraceCfg{Name: "zbio.tracer.client.ZbTest"})
-	ctx, span = tr.StartNewSpan(ctx, "client.ZbTest")
-	defer span.End()
-
 	r, err := cli.zbCli.TestMessage(ctx, &pbcommon.TestRequest{Name: str})
-	stat, ok := status.FromError(err)
-	if ok {
-		return "", status.Errorf(stat.Code(), "Message: %s\t, Details: %v,\tError: %v", stat.Message(), stat.Details(), stat.Err())
-	}
-	log.Debugf("ZbTest newMessage Res: %v, err: %v, stat: %v, ok: %v", r, err, stat, ok)
+
 	return r.GetMessage(), err
 }
 
@@ -282,33 +258,22 @@ func (cli *Client) GetBrokerGroup(name string) (*BrokerGroupInfo, error) {
 }
 */
 
-// CreateTopic creates topic with "p" partitions
+// CreateTopics creates topic with "p" partitions
 func (cli *Client) CreateTopic(topic string, brokerGroup string, p, r int32, retentionDuration int32) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
+	var err error
 
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot())
-	defer span.End()
-
-	ok, err := cli.CreateTopics([]string{topic}, brokerGroup, p, r, retentionDuration)
-	span.AddEventWithTimestamp(ctx, time.Now(), "status", []core.KeyValue{otkey.New("status").Bool(ok)}...)
+	_, err = cli.CreateTopics([]string{topic}, brokerGroup, p, r, retentionDuration)
 	if err != nil {
-		span.AddEventWithTimestamp(ctx, time.Now(), "status", []core.KeyValue{otkey.New("Error").String(err.Error())}...)
 		log.Errorf("error for CreateTopic: %s", err.Error())
 	}
+
 	return true, nil
 }
 
-// CreateTopics creates topic with "p" partitions
+// CreateTopic creates topic with "p" partitions
 func (cli *Client) CreateTopics(topicNames []string, brokerGroup string, p, r int32, retentionDuration int32) (bool, error) {
-
-	log.Debugf("Creating Topic %v with %v Partitions", topicNames, p)
+	log.Printf("Creating Topic %v with %v Partitions", topicNames, p)
 	topics := []*pbcommon.Topic{}
-	// Create Trace
-
 	for _, topic := range topicNames {
 		// Checking of regular Expression
 		// var validID = regexp.MustCompile(`^[a-zA-Z0-9-_]+$`)
@@ -332,58 +297,25 @@ func (cli *Client) CreateTopics(topicNames []string, brokerGroup string, p, r in
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
 	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
-
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot())
-	defer span.End()
-
-	/*
-		var span zbtracer.Span
-		tr := zbtracer.New(zbtracer.TraceCfg{Name: createTracerName("createTopics")})
-		ctx, span = tr.StartNewSpan(ctx, "client.createTopics")
-		defer span.End()
-		span.AddEventWithTimestamp(ctx, "CreateTopicClientRequest", []core.KeyValue{otkey.New("TopicCount").Int(len(topics))})
-	*/
-
-	span.AddEventWithTimestamp(ctx, time.Now(), "CreateTopicClientRequest", []core.KeyValue{otkey.New("TopicCount").Int(len(topics))}...)
-	// Create ctx, span
+	defer cancel()
 	response, err := cli.zbCli.CreateTopic(ctx, &request)
 	if err != nil {
 		return false, err
 	}
 	for topic, resp := range response.Responses {
-		span.AddEventWithTimestamp(ctx, time.Now(), "CreateTopicClientResponse",
-			[]core.KeyValue{
-				otkey.New("topicName").String(topic),
-				otkey.New("response").String(resp.GetMessage())}...)
-
-		//log.Debugf("Topic: %s\nBroker: %s\nPartition: %v\n", response.Response)
-		log.Debugf("Topic Response: %v  %v", topic, resp)
+		// log.Printf("Topic: %s\nBroker: %s\nPartition: %v\n", response.Response)
+		log.Printf("Topic Response: %v  %v", topic, resp)
 	}
 	return true, nil
 }
 
 // NewMessage writes messages to the topic and returns "n" numbers of messages which are written.
-// 	Response format is: response[key]value
-// 		key: is in the form (topicName:partitionHint:messageId) // from broker/broker.go
-//		value: status.code().String()
-//  TODO: (update key format if not meaningful)
 func (cli *Client) NewMessage(messages []Message) (map[string]string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	newMessageResponse := make(map[string]string, len(messages))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
-
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot(), trace.WithSpanKind(trace.SpanKindClient))
-	defer span.End()
-
-	newMessageResponse := make(map[string]string, len(messages))
 	var pbMessages []*pbcommon.Message
 
 	for i, msg := range messages {
@@ -396,9 +328,7 @@ func (cli *Client) NewMessage(messages []Message) (map[string]string, error) {
 		log.Debugf("Message {%v}: %s, %s, %s", i, msg.TopicName, msg.HintPartition, msg.Data)
 	}
 
-	span.AddEventWithTimestamp(ctx, time.Now(), "NewMessage Request", []core.KeyValue{otkey.New("message count").Int(len(messages))}...)
-
-	log.Debugf("Requested NewMessage data: %v", pbMessages)
+	log.Infof("Requested NewMessage data: %v", pbMessages)
 	request := pbcommon.NewMessageRequest{
 		Messages: pbMessages,
 	}
@@ -420,23 +350,16 @@ func ctxWithToken(ctx context.Context, scheme string, token string) context.Cont
 	return nCtx
 }
 
-func (cli *Client) ReadMessages(clientId, clientGroup string, topics []string) (map[string]chan []byte, <-chan error, error) {
+func (cli *Client) ReadMessages(clientId, clientGroup string, topics []string) (map[string]chan []byte, error) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
-	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
+	// ctx, cancel := context.WithTimeout(context.Background())
+	ctx := ctxWithToken(context.Background(), "bearer", "zb-test-token")
+	// defer cancel()
 
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot())
-	defer span.End()
-
-	span.AddEventWithTimestamp(ctx, time.Now(), "ReadMessages Request", []core.KeyValue{otkey.String("clientID", clientId)}...)
 	stream, err := cli.zbCli.SubscribeConsumer(ctx)
+
 	if err != nil {
-		log.Errorf("Unable to subscribe consumer. Error: %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Send subscribe request
@@ -451,22 +374,17 @@ func (cli *Client) ReadMessages(clientId, clientGroup string, topics []string) (
 
 	sessionId := ""
 	if subscribeResp, err := stream.Recv(); err != nil {
-		log.Errorf("Unable to receive over stream. Error: %v", err)
-		return nil, nil, err
+		return nil, err
 	} else {
 		resp := subscribeResp.GetInitResponse().Responses
 		for _, respStatus := range resp {
 			if respStatus.Code != pbcommon.ResponseStatus_OK {
-				return nil, nil, errors.New("Failed to create subscription " + respStatus.Message)
+				return nil, errors.New("Failed to create subscription " + respStatus.Message)
 			}
 		}
 		sessionId = subscribeResp.GetInitResponse().SessionId
-		span.AddEventWithTimestamp(ctx, time.Now(), "ReadMessages Consumer Response", []core.KeyValue{
-			otkey.String("sessionID", sessionId),
-			otkey.String("clientID", clientId),
-		}...)
-
-		log.Debugf("Received consumer init response %+v %+v", sessionId, resp)
+		log.Debugf("Received consumer init response %+v %+v",
+			sessionId, resp)
 	}
 
 	msgChanMap := make(map[string]chan []byte)
@@ -504,11 +422,12 @@ func (cli *Client) ReadMessages(clientId, clientGroup string, topics []string) (
 
 			// Got Re-balance message
 			consumer.rebalanceCh <- in.GetRebalResponse()
-			log.Debugf("Got %v\n", in.GetResponse())
+			// log.Println("Got " + in.Msg)
 		}
+
 	}()
 	go consumer.handleRebalance()
-	return msgChanMap, consumer.errorCh, nil
+	return msgChanMap, nil
 }
 
 func (cli *Client) PeekMessages(clientId, clientGroup, topic string) (*pbcommon.GetMessageResponse, error) {
@@ -550,7 +469,7 @@ func (cons *Consumer) handleRebalance() {
 
 		cons.partitionMapLock.RLock()
 		for _, part := range rebalanceInfo.Deleted {
-			log.Debugf("Giving up ownership of topic %s partition %d",
+			log.Printf("Giving up ownership of topic %s partition %d",
 				rebalanceInfo.TopicName, part.Partnum)
 			key := getPartitionKey(rebalanceInfo.TopicName, part.Partnum)
 
@@ -573,7 +492,6 @@ func (cons *Consumer) handleRebalance() {
 	}
 }
 
-// NewPartition is going to
 func NewPartition(topic string, partNum int32, offset int64, msgChan chan []byte, consumer *Consumer) *Partition {
 	return &Partition{
 		key:      getPartitionKey(topic, partNum),
@@ -600,8 +518,8 @@ func (part *Partition) Start(cons *Consumer) {
 	part.consumer.partitionMap[part.key] = part
 	part.consumer.partitionMapLock.Unlock()
 
-	readUt := util.Timer(msgReadInterval)
-	defer readUt.Stop()
+	//readUt := util.Timer(msgReadInterval)
+	// defer readUt.Stop()
 
 	for {
 
@@ -609,7 +527,8 @@ func (part *Partition) Start(cons *Consumer) {
 		case _ = <-part.stopCh:
 			part.Close()
 			return
-		case <-readUt.Chan():
+		case <-time.After(msgReadInterval):
+			//case <-readUt.Chan():
 			// Make the call to get the message.
 			// After getting the message pass it to part.msgChan
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -636,7 +555,6 @@ func (part *Partition) Start(cons *Consumer) {
 				}
 			} else {
 				log.Errorf("GetMessage Error : %+v ", err)
-				cons.errorCh <- fmt.Errorf("Error reading message from partition. PartitionKey: %v, Error: %v", part.key, err)
 			}
 		}
 	}
@@ -651,40 +569,24 @@ func (part *Partition) Close() {
 
 // List Topics present in the topicHeapStore
 func (cli *Client) ListTopic(*empty.Empty) (*pbcommon.DescribeTopicResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
-
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot())
-	defer span.End()
-
-	span.AddEventWithTimestamp(ctx, time.Now(), "ListTopic Request")
+	defer cancel()
 
 	response, err := cli.zbCli.ListTopic(ctx, &empty.Empty{})
 	if err != nil {
-		span.AddEventWithTimestamp(ctx, time.Now(), "ListTopic Response", []core.KeyValue{otkey.String("Error", err.Error())}...)
 		return nil, err
 	}
-	span.AddEventWithTimestamp(ctx, time.Now(), "ListTopic Response", []core.KeyValue{otkey.Int("topic count", len(response.GetTopics()))}...)
 	return response, err
 }
 
-// DescribeTopic from topicHeapStore
+// Describe topics present in the topicHeapStore
 func (cli *Client) DescribeTopic(topicNames []string) (*pbcommon.DescribeTopicResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
-
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot())
-	defer span.End()
-
-	span.AddEventWithTimestamp(ctx, time.Now(), "DescribeTopic Request", []core.KeyValue{otkey.Int("topic count", len(topicNames))}...)
+	defer cancel()
 
 	request := pbcommon.DescribeTopicRequest{Names: topicNames}
 
@@ -698,17 +600,11 @@ func (cli *Client) DescribeTopic(topicNames []string) (*pbcommon.DescribeTopicRe
 
 // DeleteTopic via topic name
 func (cli *Client) DeleteTopic(topicName []string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
-	defer cancel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	ctx = ctxWithToken(ctx, "bearer", "zb-test-token")
 
-	// create tracer
-	methodName := util.CallerFunc(2)
-	tr := zbtracer.NewTracer(zbtracer.TraceOptions{Name: methodName, Kind: zbtracer.TraceKindClient})
-	ctx, span := tr.Start(ctx, methodName, trace.WithNewRoot())
-	defer span.End()
-
-	span.AddEventWithTimestamp(ctx, time.Now(), "DeleteTopic Request", []core.KeyValue{otkey.Int("topic count", len(topicName))}...)
+	defer cancel()
 
 	request := pbcommon.DeleteTopicRequest{
 		Names: topicName,
@@ -719,7 +615,7 @@ func (cli *Client) DeleteTopic(topicName []string) (bool, error) {
 	if err == nil {
 		// log.Println(response)
 		for _, del := range response.DeletedTopics {
-			log.Debugf("Delete topic response: %v Code:%v Message:%v", del,
+			log.Infof("response: %v Code:%v Message:%v", del,
 				response.Responses[del.Name].Code, response.Responses[del.Name].Message)
 		}
 		return true, nil
@@ -745,17 +641,3 @@ func (cli *Client) DeleteTopic(topicName []string) (bool, error) {
 // 	}
 // 	return list, err
 // }
-
-// GetClientContext gives context with users information
-func GetClientContext(cfg Config) context.Context {
-	return context.WithValue(context.Background(), "user_id", cfg.Name)
-}
-
-// CreateTracer creates client prefixed tracer
-func CreateTracer(name string) trace.Tracer {
-	return global.TraceProvider().Tracer("zbio.tracer.client." + name)
-}
-
-func createTracerName(name string) string {
-	return "zbio.tracer.client." + name
-}
