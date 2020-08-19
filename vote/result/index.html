@@ -1,109 +1,156 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Roost Vote Result</title>
-    <base href="/index.html">
-    <meta name = "viewport" content = "width=device-width, initial-scale = 1.0">
-    <meta name="keywords" content="roost">
-    <meta name="author" content="Roost team">
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
-    <style>
-    .center {
-      margin-left: auto;
-      margin-right: auto;
-    }
-    </style>
-  </head>
-  <body>
-    <div id="content-container">
-      <div id="content-container-center">
-          <h1 class="heading">Dog vs Cat Vote Result</h1>
-        <div id="resultProgress" >
-            <table class="center">
-                <th>
-                  <tr style="text-align: center;">
-                    <td><b>Candidates</b></td>
-                    <td><b>Vote Distribution</b></td>
-                    <td><b>Votes</b></td>
-                  </tr>
-                </th>
-                {{range .Results.CandidateResult}}
-                <tr>
-                    <td>{{.CandidateName}}</td>
-                    <td>
-                        <div class="animated-progress progress-{{.CandidateID}}">
-                            <span data-progress="{{per .CandidateID}}%"></span>
-                        </div>
-                    </td>
-                    <td>{{.Votes}}</td>
-                </tr>
-                {{end}}
-                <tr>
-                  <td></td>
-                  <td style="text-align: right;"><b>Total Votes:</b></td>
-                  <td>{{.Results.TotalVotes}}</td>
-                </tr>
-              </table>
-        </div>   
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container">
+      <div class="heading">
+        <h1>Result</h1>        
+      </div>
+      <div class="form-container">
+        <div class="form-candidates">
+          {{ if $total := .Results.TotalVotes }}
+            {{ range .Results.CandidateResult}}
+            <div class="card-container">
+                <div class="card-background">
+                    <div class="img-container">
+                        <img class="image"src="https://image.cnbcfm.com/api/v1/image/105992231-1561667465295gettyimages-521697453.jpeg?v=1561667497&w=1600&h=900" width="100" height="100">
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="img-title">
+                        <h3> {{ .CandidateName }} : {{.Votes}} / {{$total}} </h3>
+                    </div>
+                    <div class="hr-line">
+                      <hr>
+                    </div>                  
+                    <div class="progressbar">
+                      <div class="progressbar_back">
+                        <div class="progressbar_front" style="width: {{per .CandidateID}}%"></div>
+                      </div>
+                      <span>{{per .CandidateID}}%</span>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+          {{ end }}
+        </div>
       </div>
     </div>
+    
     <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
 
-  </body>
-  <script>
-    $(".animated-progress span").each(function () {
-    $(this).animate(
-        {
-        width: $(this).attr("data-progress") ,
-        },
-        1000
-    );
-    $(this).text($(this).attr("data-progress"));
-    });
-  </script>
-  <style>
-
-    html,body{
-      margin: 0;
-      padding: 0;
-      background-color: #F7F8F9;
-      height: 100vh;
-      font-family: 'Open Sans';
+</body>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        height:100vh;
+        width: 100vw;
+        margin: 0;
     }
-
-    .heading{
-      padding: 100px 0;
-      text-align: center;
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height:90vh;
+        width: 90vw;
+        background-image: linear-gradient(to bottom, #eec0c6 50%, #7ee8fa);
+        box-shadow:2px 2px 5px 1px grey; 
     }
-
-    .animated-progress {
-        width: 300px;
-        height: 30px;
-        border-radius: 5px;
-        margin: 20px 10px;
-        border: 1px solid rgb(189, 113, 113);
-        overflow: hidden;
-        position: relative;
+    .form-container {
+      display: flex;
     }
-
-    .animated-progress span {
-        height: 100%;
-        display: block;
-        width: 0;
-        color: rgb(255, 251, 251);
-        line-height: 30px;
+    .form-candidates {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: center;
+    }
+    .img-container {
         position: absolute;
-        text-align: end;
-        /* padding-right: 5px; */
+        bottom: -30%;
+        left: 100px;
+    }
+    .image {
+        border: 5px solid white;
+        border-radius: 50%;
+        box-shadow:2px 2px 5px 1px grey; 
+    }
+    .card-container {
+        display:flex;
+        flex-direction: column;
+        height: 350px;
+        width: 300px;
+        border-radius: 8px;
+        box-shadow:2px 2px 5px 1px grey; 
+        margin: 20px;
+    }
+    .card-background {
+        position: relative;
+        flex: 4;
+        background-color: #0093E9;
+        background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
+        border-top-right-radius: 8px;
+        border-top-left-radius: 8px;
+    }
+    .card-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        flex: 5;
+        background-color: #f0eaea;
+        padding-top: 20px;
+        border-bottom-right-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+    .select-button {
+      display: flex;
+      height: 52px;
+      width: 75px;
+      background-color: #0093E9;
+      background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
+      align-items: center;
+      justify-content: center;
+      color: white;
+      border-radius: 5px; 
+      box-shadow: 2px 2px 5px 1px grey; 
+    }
+    .hr-line {
+      width: 98%;
+      
+    }
+    hr {
+        width: 100%;
+        background-color: grey;
+        /* box-shadow: 2px 2px 5px 1px grey;  */
+    }
+    
+    .progressbar {
+      display: flex;
+      width: 80%;
+      align-items: center;
     }
 
-    .progress-1 span {
-        background-color: rgb(58, 137, 235);
+    .progressbar_back {
+      width: 90%;
+      height: 4px;
+      border-radius: 5px;
+      box-shadow: 2px 2px 5px 1px grey; 
+      margin-right: 8px;
     }
-    .progress-2 span {
-        background-color: indigo;
+
+    .progressbar_front {
+      /* width: 30%; */
+      height: 4px;
+      background-color: #0093E9;
+      background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
     }
-  </style>
+</style>
 </html>
