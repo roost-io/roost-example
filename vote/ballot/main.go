@@ -9,13 +9,6 @@ import (
 	"sync"
 )
 
-// Keep same sequence as in its Vote microservice
-const (
-	dog = iota + 1
-	cat
-	total // Always use total-1, because starting with first iota, Used in init()
-)
-
 var (
 	port          string = "82"
 	candidateList map[int]string
@@ -33,6 +26,20 @@ type ballot struct {
 	// map[voter]=votedTo/candidate
 	ballotPaper map[string]int
 	counter     map[int]int
+}
+
+// Keep same candidateID:Name as in its Voter microservice.
+// We can keep "Candidates As A Services" model via API or package based approach
+func candidates() map[int]string{
+	voters := map[int]string{
+		0: "Dog",
+		1: "Cat",
+		2: "Parrot",
+		3: "Rabbit",
+		4: "Iguana",
+		5: "Python",
+	}
+	return voters
 }
 
 func serveRoot(w http.ResponseWriter, r *http.Request) {
@@ -66,11 +73,9 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Initialize candidates.
 func init() {
-	// populating allowed candidate lists
-	candidateList = make(map[int]string, total-1)
-	candidateList[dog] = "Dog"
-	candidateList[cat] = "Cat"
+	candidateList = candidates()
 }
 
 func main() {

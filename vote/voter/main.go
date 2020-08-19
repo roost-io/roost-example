@@ -10,12 +10,6 @@ import (
 	"os"
 )
 
-// Keep same sequence as in its Ballot microservice
-const (
-	dog = iota + 1
-	cat
-)
-
 const port string = "81"
 
 var ballotEndpoint string = ""
@@ -37,6 +31,20 @@ type VoterPageData struct {
 type BallotPaper struct {
 	Voter string `json:"Voter"`
 	Vote  string `json:"Vote"`
+}
+
+// Keep same candidateID:Name as in its Voter microservice.
+// We can keep "Candidates As A Services" model via API or package based approach
+func candidates() map[int]string{
+	voters := map[int]string{
+		0: "Dog",
+		1: "Cat",
+		2: "Parrot",
+		3: "Rabbit",
+		4: "Iguana",
+		5: "Python",
+	}
+	return voters
 }
 
 func saveToballot(ballot string, ballotPaper map[string][]string) (status string){
@@ -62,12 +70,12 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("not a valid voter. Voter's identity is his unique hostname. Exiting...")
 	}
-	data := VoterPageData{
-		Candidates: []Candidate{
-			{ID: dog, Name: "Dog"},
-			{ID: cat, Name: "Cat"},
-		},
-		Voter: voter,
+	candidates := candidates()
+	pagedata := VoterPageData{}
+	pagedata.Voter = voter
+	for id, name := range candidates{
+		candidate := Candidate{ID: id, Name: name}
+		pagedata.Candidates = append(pagedata.Candidates, candidate)
 	}
 	tmpl, err := template.ParseFiles("index.html")
 	if err != nil {
@@ -75,13 +83,13 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if already voted, display his vote
-	data.Vote = r.FormValue("vote")
+	pagedata.Vote = r.FormValue("vote")
 
 	if r.Method == http.MethodPost {
-		ballotPaper := url.Values{"voter": {voter}, "vote": {data.Vote}}
-		data.Status = saveToballot(ballotEndpoint, ballotPaper)
+		ballotPaper := url.Values{"voter": {voter}, "vote": {pagedata.Vote}}
+		pagedata.Status = saveToballot(ballotEndpoint, ballotPaper)
 	}
-	tmpl.Execute(w, data)
+	tmpl.Execute(w, pagedata)
 }
 
 func main() {
