@@ -1,0 +1,24 @@
+voter:
+  image: voter:latest
+  #  Increase voters counts to deploy more voters
+  replica: 2
+  serviceName: voter
+  servicePort: 80
+  # Added voters would be accessible over ($nodePort+1) i.e. 30010, 30011, 30012 ...
+  nodePort: 30010
+
+
+ballot:
+  image: ballot:latest
+  # Ballot replica MUST always be 1 as it's in-memory ballot
+  replica: 1
+  serviceName: ballot
+  servicePort: 80
+
+result:
+  image: result:latest
+  replica: 2
+  serviceName: result
+  servicePort: 80
+  # service would be accessible over http://roost-controlplane:$nodePort
+  nodePort: 30020

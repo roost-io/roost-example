@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: voter-1
+  labels:
+    app: voter
+    voterID: "1"
+spec:
+  containers:
+  - name: voter
+    image: voter:latest
+    env:
+    - name: BALLOT_ENDPOINT 
+      value: ballot:80
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+    ports:
+      - containerPort: 81
+    imagePullPolicy: Never
+  terminationGracePeriodSeconds: 0
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote-1
+  labels:
+    app: voter
+spec:
+  type: NodePort
+  selector:
+    app: voter
+    voterID: "1"
+  ports:
+    - port: 80
+      nodePort: 30011
+      targetPort: 81

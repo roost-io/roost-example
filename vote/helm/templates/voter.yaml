@@ -1,0 +1,46 @@
+{{ $ballotServiceName := .Values.ballot.serviceName}}
+{{ $ballotServicePort := .Values.ballot.servicePort}}
+{{ $voterServiceNodePort := .Values.voter.nodePort}}
+{{ $voters := .Values.voter.replica | int}}
+{{ range $i, $e := until $voters}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: voter-{{$i}}
+  labels:
+    app: voter
+    voterID: "{{$i}}"
+spec:
+  containers:
+  - name: voter
+    image: voter:latest
+    env:
+    - name: BALLOT_ENDPOINT 
+      value: "{{ $ballotServiceName }}:{{ $ballotServicePort }}"
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+    ports:
+      - containerPort: 81
+    imagePullPolicy: Never
+  terminationGracePeriodSeconds: 0
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote-{{$i}}
+  labels:
+    app: voter
+spec:
+  type: NodePort
+  selector:
+    app: voter
+    voterID: "{{$i}}"
+  ports:
+    - port: 80
+      nodePort: {{add $voterServiceNodePort $i}}
+      targetPort: 81
+---
+{{end}}

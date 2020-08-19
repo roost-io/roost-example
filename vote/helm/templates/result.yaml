@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.result.serviceName}}
+  labels:
+    app: result
+spec:
+  type: NodePort
+  ports:
+  - port: {{.Values.result.servicePort}}
+    nodePort: {{.Values.result.nodePort}}
+    targetPort: 83
+    name: result-service
+  selector:
+    app: result
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.result.serviceName}}
+  labels:
+    app: result
+spec:
+  replicas: {{.Values.result.replica}}
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+      - name: result
+        image: result:latest
+        env:
+        - name: BALLOT_ENDPOINT 
+          value: "{{ .Values.ballot.serviceName }}:{{ .Values.ballot.servicePort }}"
+        ports:
+        - containerPort: 83
+          name: result
+        imagePullPolicy: Never
