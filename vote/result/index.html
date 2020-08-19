@@ -8,7 +8,12 @@
 <body>
     <div class="container">
       <div class="heading">
-        <h1>Result</h1>        
+        <div class="heading-img">
+          <img src="https://zbio.atlassian.net/secure/projectavatar?pid=10000&avatarId=10512&size=xxlarge" alt="" style="height: 65px; width: 55px;">
+        </div>
+        <div class="heading-text">
+          <h1>Result</h1>        
+        </div>
       </div>
       <div class="form-container">
         <div class="form-candidates">
@@ -47,6 +52,7 @@
 </body>
 <style>
     body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
@@ -61,8 +67,15 @@
         align-items: center;
         height:90vh;
         width: 90vw;
-        background-image: linear-gradient(to bottom, #eec0c6 50%, #7ee8fa);
+        background-image: linear-gradient(to bottom, #c5a5ed 50%, #7ee8fa);
         box-shadow:2px 2px 5px 1px grey; 
+    }
+    .heading {
+      display: flex;
+      width: 100%;
+    }
+    .heading-img {
+      width: 45%;
     }
     .form-container {
       display: flex;
@@ -102,7 +115,7 @@
     .card-content {
         display: flex;
         flex-direction: column;
-        justify-content: space-around;
+        justify-content: center;
         align-items: center;
         flex: 5;
         background-color: #f0eaea;
@@ -133,6 +146,7 @@
     }
     
     .progressbar {
+      margin-top: 23px;
       display: flex;
       width: 80%;
       align-items: center;
