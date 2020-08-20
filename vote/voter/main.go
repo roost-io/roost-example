@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 )
 
 const port string = "81"
@@ -23,7 +24,7 @@ type VoterPageData struct {
 	Candidates []Candidate
 	Voter      string
 	// To whome Voter voted
-	Vote       string
+	Vote string
 	// Status
 	Status string
 }
@@ -35,7 +36,7 @@ type BallotPaper struct {
 
 // Keep same candidateID:Name as in its Voter microservice.
 // We can keep "Candidates As A Services" model via API or package based approach
-func candidates() map[int]string{
+func candidates() map[int]string {
 	voters := map[int]string{
 		0: "Dog",
 		1: "Cat",
@@ -47,14 +48,14 @@ func candidates() map[int]string{
 	return voters
 }
 
-func saveToballot(ballot string, ballotPaper map[string][]string) (status string){
+func saveToballot(ballot string, ballotPaper map[string][]string) (status string) {
 	resp, err := http.PostForm(ballotEndpoint, ballotPaper)
 	if err != nil {
 		log.Printf("FAIL to send vote to ballot. BalllotEndpoint: %v\t BallotPaper: %v Error: %v\n", ballotEndpoint, ballotPaper, err)
 		status = "Ballot service is unavailable."
 	}
 	if resp != nil {
-		if resp.StatusCode == http.StatusOK {		
+		if resp.StatusCode == http.StatusOK {
 			log.Println("Vote saved to ballot. Voted to: ", ballotPaper["vote"][0])
 			status = "Vote Saved successfully"
 		} else {
@@ -70,13 +71,18 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("not a valid voter. Voter's identity is his unique hostname. Exiting...")
 	}
-	candidates := candidates()
+
 	pagedata := VoterPageData{}
 	pagedata.Voter = voter
-	for id, name := range candidates{
+
+	candidates := candidates()
+	for id, name := range candidates {
 		candidate := Candidate{ID: id, Name: name}
 		pagedata.Candidates = append(pagedata.Candidates, candidate)
 	}
+	// Sort candidates as map data is unordered
+	sort.Slice(pagedata.Candidates, func(i, j int) bool { return pagedata.Candidates[i].ID < pagedata.Candidates[j].ID })
+
 	tmpl, err := template.ParseFiles("index.html")
 	if err != nil {
 		log.Fatalf("unable to parse template file. Error: %v", err)

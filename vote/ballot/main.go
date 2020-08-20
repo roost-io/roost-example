@@ -30,7 +30,7 @@ type ballot struct {
 
 // Keep same candidateID:Name as in its Voter microservice.
 // We can keep "Candidates As A Services" model via API or package based approach
-func candidates() map[int]string{
+func candidates() map[int]string {
 	voters := map[int]string{
 		0: "Dog",
 		1: "Cat",

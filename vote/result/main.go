@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -88,9 +89,15 @@ func serveRoot(w http.ResponseWriter, r *http.Request) {
 				log.Println("error parsing result data, error: ", err)
 			}
 		}
+
+		// Sort candidates by their ID
+		sort.Slice(result.CandidateResult, func(i, j int) bool {
+			return result.CandidateResult[i].CandidateID < result.CandidateResult[j].CandidateID
+		})
+		
 		// count total votes
-		for _, res := range result.CandidateResult {
-			result.TotalVotes += res.Votes
+		for _, v := range result.CandidateResult {
+			result.TotalVotes += v.Votes
 		}
 
 		log.Printf("Result: %+v", result)
