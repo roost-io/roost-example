@@ -22,11 +22,12 @@
         .container {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            /* justify-content: center; */
             align-items: flex-start;
             height: 100%;
             width: 100%;
             margin-left: 150px;
+            margin-top: 50px;
         }
 
         .heading {
@@ -35,12 +36,16 @@
         }
 
         .heading-img {
-            padding: 20px;
+            /* padding: 20px; */
+            display: flex;
+            flex-direction: row;
+            margin-bottom: 60px;
             width: 45%;
         }
 
         .heading-text {
             color: white;
+            margin-bottom: 70px;
         }
 
         .form-container {
@@ -143,6 +148,18 @@
             background-color: #6544fb;
             color: white
         }
+        .roost-heading {
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          color:white;
+        }
+        .roost-main-heading {
+          margin: 0;
+        }
+        .roost-sub-heading {
+          margin: 5px 0px;
+        }
     </style>
 
 </head>
@@ -150,11 +167,15 @@
 <body>
     <div class="container">
         <!-- <div class="heading"> -->
-        <!-- <div class="heading-img">
+        <div class="heading-img">
           <img src="https://zbio.atlassian.net/secure/projectavatar?pid=10000&avatarId=10512&size=xxlarge" alt="" style="height: 65px; width: 55px;">
-        </div> -->
+          <div class="roost-heading">
+            <h2 class="roost-main-heading">Roost</h2>
+            <h6 class="roost-sub-heading">Build, Deploy, Test </h6>
+          </div>
+        </div>
         <div class="heading-text">
-            <h1>Voting App</h1>
+            <h1>Voting Application</h1>
         </div>
         <!-- </div> -->
         <div class="form-container">
