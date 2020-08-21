@@ -10,7 +10,7 @@ body {
   height: 370px;
   margin: 20px;
   border-radius: 5px;
-  box-shadow: 2px 2px 5px 1px grey;
+  /* box-shadow: 2px 2px 5px 1px grey; */
 }
 
 .cardContainer {
@@ -34,12 +34,14 @@ body {
 }
 .cardContent {
   flex: 4;
+  flex-direction: column;
   justify-content: center;
   display: flex;
   align-items: center;
   font-weight: bold;
   font-size: 22px;
   background-color: white;
+  padding-top: 30px;
 }
 .cardBackgroundImage {
   position: absolute;
@@ -50,7 +52,7 @@ body {
   border: 5px solid #d4cfcf;
 }
 
-.App {
+.Home {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -74,4 +76,19 @@ body {
   display: flex;
   justify-content: flex-start;
   margin: 30px;
+}
+
+.progressbar_back {
+  width: 100%;
+  border-radius: 4px;
+  font-size: 15px;
+  display: flex;
+  align-items: baseline;
+  /* border: 1px solid; */
+}
+
+.progressbar_front {
+  height: 10px;
+  border-radius: 4px;
+  background-image: linear-gradient(to top right, orange , red);
 }
