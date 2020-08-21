@@ -4,7 +4,7 @@ import Result from './Result'
 import { Router, Link } from "@reach/router";
 import "./App.css";
 
-const ballot_endpoint = "http://roost-controlplane:30080/"
+const ballot_endpoint = "roost-controlplane:30080"
 class App extends Component {
   constructor(props) {
     super(props);

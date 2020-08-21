@@ -6,7 +6,7 @@ import minikube from "./assets/minikube.png";
 import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
-const ballot_endpoint = "http://roost-controlplane:30080/"
+const ballot_endpoint = "roost-controlplane:30080"
 class Result extends Component {
   constructor(props) {
     super(props);
@@ -49,7 +49,7 @@ class Result extends Component {
       .then((response) => response.json())
       .then((response) => {
         console.log(response);
-        const resultData = JSON.parse(response);
+        const resultData = response;
         // const resultData = {
         //   results: [
         //     {
