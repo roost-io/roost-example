@@ -7,6 +7,7 @@ import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
 const ballot_endpoint = "roost-controlplane:30080"
+let date = new Date()
 class Result extends Component {
   constructor(props) {
     super(props);
@@ -49,6 +50,7 @@ class Result extends Component {
       .then((response) => response.json())
       .then((response) => {
         console.log(response);
+        date = new Date()
         const resultData = response;
         // const resultData = {
         //   results: [
@@ -161,7 +163,7 @@ class Result extends Component {
           <img src={kubernates} width="70px" height="70px" />
         </div>
         <div className="heading">
-            Developers prefer the below tool for building K8S cluster: + date.toLocaleString()
+            Preferred by developers for building K8S cluster, as of {date.toLocaleString()}
         </div>
         <div className="cardContainer">
           {this.state.results.map((candidate, index) => {
