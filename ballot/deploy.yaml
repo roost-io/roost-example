@@ -5,7 +5,7 @@ metadata:
     apps: ballot
   name: ballot
 spec: 
-  type: NodePort
+  type: ClusterIP
   selector: 
     app: ballot
   ports:
