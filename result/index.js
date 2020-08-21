@@ -1,6 +1,8 @@
 REACT_APP_BALLOT_ENDPOINT="http://roost-controlplane:32462"
 var URL = REACT_APP_BALLOT_ENDPOINT
 var resultData = null; 
+date = new Date();
+
 var data = {
     results: [
        {
@@ -75,7 +77,7 @@ function updateResultX() {
         document.getElementById("main_content").style.display = "none";
         document.getElementById("error_msg").style.display = "block";
     }
-    else { //if (resultData.status.code == ) {
+    else {
         console.log("got here")
         resultData.results.sort((a, b) => {               
             return b.total_votes - a.total_votes;
@@ -143,13 +145,6 @@ function updateResultX() {
     
 }
 
-date = new Date();
 document.getElementById("heading_date").innerHTML = "Developer prefer the below tool for building K8S cluster<br>(As of Date:" + date.toLocaleString() + ")";
 
 updateResult()
-
-// 0: roost
-// 1: docker
-// 2: minikube
-// 3: k3d
-// 4: kind 

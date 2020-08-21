@@ -163,7 +163,7 @@ class Result extends Component {
           <img src={kubernates} width="70px" height="70px" />
         </div>
         <div className="heading">
-            Preferred by developers for building K8S cluster, as of {date.toLocaleString()}
+            Developers prefer for building K8S cluster, as of {date.toLocaleString()}
         </div>
         <div className="cardContainer">
           {this.state.results.map((candidate, index) => {
