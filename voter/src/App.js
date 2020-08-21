@@ -152,10 +152,11 @@ class App extends Component {
 
     return (
       <div className="App">
+        {/* <div className="heading">Ballot is unava</div> */}
         <div className="logo">
         <img src={kubernates} width="70px" height="70px" />
         </div>
-        <div className="heading">Question ?</div>
+        <div className="heading">How do you create a K8S cluster on your local system ?</div>
         <div className="cardContainer">
           {this.state.candidates.map((candidate, index) => {
             return CustomCard(candidate, index);
