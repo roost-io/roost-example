@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  labels: 
+    apps: ballot
+  name: {{.Values.ballot.serviceName}}
+spec: 
+  type: ClusterIP
+  selector: 
+    app: ballot
+  ports:
+  - name: ballot
+    port: {{.Values.ballot.servicePort}}
+    targetPort: 82
+
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  labels: 
+    app: ballot
+  name:  {{.Values.ballot.serviceName}}
+spec: 
+  replicas: {{.Values.ballot.replica}}
+  selector:
+    matchLabels:
+      app: ballot
+  template: 
+    metadata: 
+      labels: 
+        app: ballot
+    spec: 
+      containers: 
+      - image: {{.Values.ballot.image}}
+        name: ballot
+        ports:
+        - containerPort: 82
+        imagePullPolicy: Never
