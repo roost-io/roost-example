@@ -161,7 +161,7 @@ class Result extends Component {
           <img src={kubernates} width="70px" height="70px" />
         </div>
         <div className="heading">
-          How do you create a K8S cluster on your local system ?
+            Developers prefer the below tool for building K8S cluster:
         </div>
         <div className="cardContainer">
           {this.state.results.map((candidate, index) => {
