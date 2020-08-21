@@ -36,15 +36,15 @@ class App extends Component {
         },
       ],
       vote: "",
-      username: "",
+      // username: "",
       disabled: false
     };
   }
 
-  componentDidMount() {
-    let r = Math.random().toString(36).substring(7);
-    this.setState({ username: r });
-  }
+  // componentDidMount() {
+  //   let r = Math.random().toString(36).substring(7);
+  //   this.setState({ username: r });
+  // }
 
   componentDidUpdate() {
     // const data = {
