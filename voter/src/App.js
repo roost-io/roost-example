@@ -6,6 +6,8 @@ import minikube from "./assets/minikube.png";
 import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
+
+const ballot_endpoint = process.env.REACT_APP_BALLOT_ENDPOINT || ""
 class App extends Component {
   constructor(props) {
     super(props);
@@ -14,26 +16,26 @@ class App extends Component {
       candidates: [
         {
           Name: "Roost",
-          ID: 0,
+          ID: "0",
         },
         {
           Name: "Docker Desktop",
-          ID: 1,
+          ID: "1",
         },
         {
           Name: "Minikube",
-          ID: 2,
+          ID: "2",
         },
         {
           Name: "K3d",
-          ID: 3,
+          ID: "3",
         },
         {
           Name: "Kind",
-          ID: 4,
+          ID: "4",
         },
       ],
-      vote: -1,
+      vote: "",
       username: "",
       disabled: false
     };
@@ -45,20 +47,22 @@ class App extends Component {
   }
 
   componentDidUpdate() {
-    const data = {
-      candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
-    }
-    console.log("state: ", this.state)
-    console.log("state: ", data)
-    // if(process.env.BALLOT_END_POINT != "") {
-    //   console.error("ballot end-point is not set");
+    // const data = {
+    //   candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
+    // }
+    // console.log("state: ", this.state)
+    // console.log("state: ", data)
+    // console.log("ballot endpoint is: ", ballot_endpoint)
+    // console.log("env: ", process.env)
+    // if(ballot_endpoint === "") {
+    //   console.error("ballot endpoint is not set");
     // } else {
-    //   fetch("http://ballotEndPoint/", {
+    //   fetch(`http://${ballot_endpoint}`, {
     //     method: "POST",
     //     body: JSON.stringify(data),
     //   })
     // .then(response => response.json())
-    // .then(console.log(response) );
+    // .then(response => {console.log(response)});
     // }
   }
 
