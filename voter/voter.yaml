@@ -12,7 +12,7 @@ spec:
     type: "roost-example"
   ports:
   - name: voter
-    port: 90
+    port: 3000
     targetPort: 3000
     nodePort: 30030
 
@@ -36,6 +36,8 @@ spec:
       containers:
       - name: voter
         image: voter:latest
+        stdin: true
+        tty: true
         env:
         - name: REACT_APP_BALLOT_ENDPOINT
           value: ballot:80
