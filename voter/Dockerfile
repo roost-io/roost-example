@@ -21,3 +21,4 @@ COPY . ./
 
 EXPOSE 3000
 # start app
+ENTRYPOINT ["npm", "start"]
