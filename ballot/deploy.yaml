@@ -5,13 +5,14 @@ metadata:
     apps: ballot
   name: ballot
 spec: 
-  type: ClusterIP
+  type: NodePort
   selector: 
     app: ballot
   ports:
   - name: ballot
     port: 80
     targetPort: 80
+    nodePort: 30020
 
 ---
 apiVersion: apps/v1
