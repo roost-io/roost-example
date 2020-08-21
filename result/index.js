@@ -1,10 +1,44 @@
 URL = "http://localhost"
 
+var data = {
+    results: [
+       {
+           id: 0,
+           name: "Roost",
+           total_votes: 1000,
+       },
+       {
+           id: 1,
+           name: "Docker",
+           total_votes: 200,
+       },
+       {
+            id: 2,
+            name: "Minikube",
+            total_votes: 300,
+        },
+        {
+             id: 3,
+             name: "K3d",
+             total_votes: 200,
+         },
+         {
+            id: 4,
+            name: "kind",
+            total_votes: 300,
+        }
+   ],
+   status:{
+      code: 200,
+      message: "vote saved successfully"
+   }
+}
+
 function updateResult() {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            data = JSON.parse(this.responseText)
+    // var xhttp = new XMLHttpRequest();
+    // xhttp.onreadystatechange = function() {
+    //     if (this.readyState == 4 && this.status == 200) {
+            // data = JSON.parse(this.responseText)
 
             if(data.status.code == 204) {
                 console.log(data.status.message)
@@ -35,14 +69,54 @@ function updateResult() {
             
                 data.results.forEach(item => {
                     percent = Math.round(((100 * item.total_votes) / total) / 2);
+                    src = "";
                     if(percent < 1) {
                         percent = 0
                     }
-                    out += '<div class="result-card">'+
-                            '    <div class="progressbar" style="width: '+ percent +'%;"></div>'+
-                            '    <div class="logo">'+ item.name + '</div>  '+
-                            '    <div class="percentage">'+(percent * 2)+' %</div>  '+
+                    
+                    if(item.id == 0) {
+                        src = "./assets/roost.png"
+                    }
+                    else if(item.id == 1) {
+                        src = "./assets/docker.png"
+                    }
+                    else if(item.id == 2) {
+                        src = "./assets/minikube.png"
+                    }
+                    else if(item.id == 3) {
+                        src = "./assets/k3d.svg"
+                    }
+                    else if(item.id == 4) {
+                        src = "./assets/kind.png"
+                    }
+                    console.log("src: ", src)
+
+                    out +=  '<div class="card">'+
+                            '    <div class="cardBackgroundContainer">'+
+                            '        <div class="cardBackground"></div>'+
+                            '        <div class="cardBackgroundImage">'+
+                            '            <img'+
+                            '            src= '+ src +
+                            '            width="150px"'+
+                            '            height="150px"'+
+                            '            class="image"'+
+                            '            />'+
+                            '        </div>'+
+                            '    </div>'+
+                            '    <div class="cardContent">'+
+                            '        '+ item.name +
+                            '        <div class="progressbar_back">'+
+                            '           <div class="progressbar_front" style="width: '+ percent +'%;"></div>'+
+                                + percent +
+                            '        %</div>'+
+                            '    </div>+'+
                             '</div>';
+                        
+                    // out += '<div class="result-card">'+
+                    //         '    <div class="progressbar" style="width: '+ percent +'%;"></div>'+
+                    //         '    <div class="logo">'+ item.name + '</div>  '+
+                    //         '    <div class="percentage">'+(percent * 2)+' %</div>  '+
+                    //         '</div>';
                 });
                 document.getElementById("candidates").innerHTML = out;
                 document.getElementById("main_content").style.display = "block";
@@ -50,11 +124,11 @@ function updateResult() {
 
             }
         }
-    };
-    xhttp.open("GET", URL, true);
-    xhttp.send();
+//     };
+//     xhttp.open("GET", URL, true);
+//     xhttp.send();
     
-}
+// }
 
 // setInterval( () => {
 //     updateResult()
@@ -62,36 +136,8 @@ function updateResult() {
 
 updateResult()
 
-// var data = {
-//     candidates: [
-//        {
-//            ID: 0,
-//            name: "kind",
-//            total_votes: 1000,
-//        },
-//        {
-//            ID: 1,
-//            name: "Roost",
-//            total_votes: 200,
-//        },
-//        {
-//             ID: 2,
-//             name: "Docker-Desktop",
-//             total_votes: 300,
-//         },
-//         {
-//              ID: 3,
-//              name: "K38",
-//              total_votes: 200,
-//          },
-//          {
-//             ID: 4,
-//             name: "minikube",
-//             total_votes: 300,
-//         }
-//    ],
-//    status:{
-//       code: 200,
-//       message: "vote saved successfully"
-//    }
-// }
+// 0: roost
+// 1: docker
+// 2: minikube
+// 3: k3d
+// 4: kind 
