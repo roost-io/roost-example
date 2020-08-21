@@ -7,6 +7,7 @@ import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
 const ballot_endpoint = "roost-controlplane:30080"
+const date = new Date();
 class Result extends Component {
   constructor(props) {
     super(props);
@@ -160,8 +161,8 @@ class Result extends Component {
         <div className="logo">
           <img src={kubernates} width="70px" height="70px" />
         </div>
-        <div className="heading">
-            Developers prefer the below tool for building K8S cluster:
+        <div className="heading_result">
+          Developer prefer the below tool for building K8S cluster<br />(As of Date: {date.toLocaleString()})
         </div>
         <div className="cardContainer">
           {this.state.results.map((candidate, index) => {
