@@ -36,34 +36,36 @@ class App extends Component {
         },
       ],
       vote: "",
-      username: "",
+      // username: "",
       disabled: false
     };
   }
 
-  componentDidMount() {
-    let r = Math.random().toString(36).substring(7);
-    this.setState({ username: r });
-  }
+  // componentDidMount() {
+  //   let r = Math.random().toString(36).substring(7);
+  //   this.setState({ username: r });
+  // }
 
-  componentDidUpdate() {
-    // const data = {
-    //   candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
-    // }
-    // console.log("state: ", this.state)
-    // console.log("state: ", data)
-    // console.log("ballot endpoint is: ", ballot_endpoint)
-    // console.log("env: ", process.env)
-    // if(ballot_endpoint === "") {
-    //   console.error("ballot endpoint is not set");
-    // } else {
-    //   fetch(`http://${ballot_endpoint}`, {
-    //     method: "POST",
-    //     body: JSON.stringify(data),
-    //   })
-    // .then(response => response.json())
-    // .then(response => {console.log(response)});
-    // }
+  componentDidUpdate(prevProps, prevState) {
+    if(prevState.vote != this.state.vote) {
+      const data = {
+        candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
+      }
+      console.log("state: ", this.state)
+      console.log("state: ", data)
+      console.log("ballot endpoint is: ", ballot_endpoint)
+      console.log("env: ", process.env)
+      if(ballot_endpoint === "") {
+        console.error("ballot endpoint is not set");
+      } else {
+        fetch(`http://${ballot_endpoint}`, {
+          method: "POST",
+          body: JSON.stringify(data),
+        })
+      .then(response => response.json())
+      .then(response => {console.log(response)});
+      }
+    }
   }
 
   render() {
@@ -150,10 +152,11 @@ class App extends Component {
 
     return (
       <div className="App">
+        {/* <div className="heading">Ballot is unava</div> */}
         <div className="logo">
         <img src={kubernates} width="70px" height="70px" />
         </div>
-        <div className="heading">Question ?</div>
+        <div className="heading">How do you create a K8S cluster on your local system ?</div>
         <div className="cardContainer">
           {this.state.candidates.map((candidate, index) => {
             return CustomCard(candidate, index);
