@@ -46,24 +46,26 @@ class App extends Component {
   //   this.setState({ username: r });
   // }
 
-  componentDidUpdate() {
-    // const data = {
-    //   candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
-    // }
-    // console.log("state: ", this.state)
-    // console.log("state: ", data)
-    // console.log("ballot endpoint is: ", ballot_endpoint)
-    // console.log("env: ", process.env)
-    // if(ballot_endpoint === "") {
-    //   console.error("ballot endpoint is not set");
-    // } else {
-    //   fetch(`http://${ballot_endpoint}`, {
-    //     method: "POST",
-    //     body: JSON.stringify(data),
-    //   })
-    // .then(response => response.json())
-    // .then(response => {console.log(response)});
-    // }
+  componentDidUpdate(prevProps, prevState) {
+    if(prevState.vote != this.state.vote) {
+      const data = {
+        candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
+      }
+      console.log("state: ", this.state)
+      console.log("state: ", data)
+      console.log("ballot endpoint is: ", ballot_endpoint)
+      console.log("env: ", process.env)
+      if(ballot_endpoint === "") {
+        console.error("ballot endpoint is not set");
+      } else {
+        fetch(`http://${ballot_endpoint}`, {
+          method: "POST",
+          body: JSON.stringify(data),
+        })
+      .then(response => response.json())
+      .then(response => {console.log(response)});
+      }
+    }
   }
 
   render() {
