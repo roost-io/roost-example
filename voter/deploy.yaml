@@ -12,9 +12,9 @@ spec:
     type: "roost-example"
   ports:
   - name: voter
-    port: 80
+    port: 3000
     targetPort: 3000
-    nodePort: 30010
+    nodePort: 30080
 
 ---
 apiVersion: apps/v1
@@ -36,17 +36,6 @@ spec:
       containers:
       - name: voter
         image: voter:latest
-<<<<<<< HEAD
-        env:
-        - name: REACT_APP_BALLOT_ENDPOINT
-          value: ballot:80
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-        ports:
-        - containerPort: 
-=======
         stdin: true
         tty: true
         env:
@@ -54,5 +43,4 @@ spec:
           value: ballot:80
         ports:
         - containerPort: 3000
->>>>>>> 3e799b284840b1a398bf13b2b8b9cc8f83f5e8b2
         imagePullPolicy: Never
