@@ -160,13 +160,25 @@
         .roost-sub-heading {
           margin: 5px 0px;
         }
+        .error {
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          color:white;
+        }
     </style>
 
 </head>
 
 <body>
     <div class="container">
+      
         <!-- <div class="heading"> -->
+        <div class="error" > 
+          <h2>Please check ballot is not running</h2>
+        </div>
+        
+        <div class="no-error">
         <div class="heading-img">
           <img src="https://zbio.atlassian.net/secure/projectavatar?pid=10000&avatarId=10512&size=xxlarge" alt="" style="height: 65px; width: 55px;">
           <div class="roost-heading">
@@ -204,6 +216,7 @@
                 {{ end }}
             </form>
         </div>
+      </div>
     </div>
 
     <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>

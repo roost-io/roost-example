@@ -156,51 +156,62 @@
       .roost-sub-heading {
         margin: 5px 0px;
       }
+      .error {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        color:white;
+      }
   </style>
 </head>
 <body>
     <div class="container">
+      <div class="error" > 
+        <h2>Please check ballot is not running</h2>
+      </div>
       <!-- <div class="heading">
         <div class="heading-img">
           <img src="https://zbio.atlassian.net/secure/projectavatar?pid=10000&avatarId=10512&size=xxlarge" alt="" style="height: 65px; width: 55px;">
         </div> -->
-        <div class="heading-img">
-          <img src="https://zbio.atlassian.net/secure/projectavatar?pid=10000&avatarId=10512&size=xxlarge" alt="" style="height: 65px; width: 55px;">
-          <div class="roost-heading">
-            <h2 class="roost-main-heading">Roost</h2>
-            <h6 class="roost-sub-heading">Build, Deploy, Test </h6>
-          </div>
-        </div>
-        <div class="heading-text">
-          <h1>Result</h1>        
-        </div>
-      <!-- </div> -->
-      <div class="form-container">
-        <div class="form-candidates">
-          {{ $total := .Results.TotalVotes }}
-          {{ range .Results.CandidateResult}}
-            <div class="card-container">
-                <!-- <div class="card-background"> -->
-                    <div class="img-container">
-                        <img class="image"src="https://image.cnbcfm.com/api/v1/image/105992231-1561667465295gettyimages-521697453.jpeg?v=1561667497&w=1600&h=900" width="100" height="100">
-                    </div>
-                <!-- </div> -->
-                <div class="card-content">
-                    <div class="img-title">
-                        <h3> {{ .CandidateName }} : {{.Votes}} / {{$total}} </h3>
-                    </div>
-                    <!-- <div class="hr-line">
-                      <hr>
-                    </div>                   -->
-                    <div class="progressbar">
-                      <div class="progressbar_back">
-                        <div class="progressbar_front" style="width: {{per .CandidateID}}%"></div>
-                      </div>
-                      <span>{{per .CandidateID}}%</span>
-                    </div>
-                </div>
+        <div class="no-error">
+          <div class="heading-img">
+            <img src="https://zbio.atlassian.net/secure/projectavatar?pid=10000&avatarId=10512&size=xxlarge" alt="" style="height: 65px; width: 55px;">
+            <div class="roost-heading">
+              <h2 class="roost-main-heading">Roost</h2>
+              <h6 class="roost-sub-heading">Build, Deploy, Test </h6>
             </div>
-          {{ end }}
+          </div>
+          <div class="heading-text">
+            <h1>Result</h1>        
+          </div>
+        <!-- </div> -->
+        <div class="form-container">
+          <div class="form-candidates">
+            {{ $total := .Results.TotalVotes }}
+            {{ range .Results.CandidateResult}}
+              <div class="card-container">
+                  <!-- <div class="card-background"> -->
+                      <div class="img-container">
+                          <img class="image"src="https://image.cnbcfm.com/api/v1/image/105992231-1561667465295gettyimages-521697453.jpeg?v=1561667497&w=1600&h=900" width="100" height="100">
+                      </div>
+                  <!-- </div> -->
+                  <div class="card-content">
+                      <div class="img-title">
+                          <h3> {{ .CandidateName }} : {{.Votes}} / {{$total}} </h3>
+                      </div>
+                      <!-- <div class="hr-line">
+                        <hr>
+                      </div>                   -->
+                      <div class="progressbar">
+                        <div class="progressbar_back">
+                          <div class="progressbar_front" style="width: {{per .CandidateID}}%"></div>
+                        </div>
+                        <span>{{per .CandidateID}}%</span>
+                      </div>
+                  </div>
+              </div>
+            {{ end }}
+          </div>
         </div>
       </div>
     </div>
