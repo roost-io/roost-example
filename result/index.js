@@ -1,4 +1,4 @@
-REACT_APP_BALLOT_ENDPOINT="roost-controlplane:$nodeport npm start"
+REACT_APP_BALLOT_ENDPOINT="http://roost-controlplane:32462"
 var URL = REACT_APP_BALLOT_ENDPOINT
 var resultData = null; 
 var data = {
@@ -35,7 +35,7 @@ var data = {
    }
 }
 
-function getResult() {
+function updateResult() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         console.log(this.status)
@@ -48,8 +48,12 @@ function getResult() {
             document.getElementById("error_msg").style.display = "block";
         }
 
+        console.log("readyState:", this.readyState);
         if (this.readyState == 4 && this.status == 200) {
             resultData = JSON.parse(this.responseText)
+            console.log("got resultData", resultData)
+            updateResultX()
+            // return resultData;
         }
      };
         xhttp.open("GET", URL, true);
@@ -57,12 +61,13 @@ function getResult() {
 
 }
 
-function updateResult() {
+function updateResultX() {
     // getResult()
-    if(resultData == null) {
-        resultData = data;
-    }
-
+    // if(resultData == null) {
+    //     console.log("getting into null check")
+    //     // resultData = data;
+    // }
+    console.log(resultData.status);
     if(resultData.status.code == 204) {
         console.log(resultData.status.message)
         out = '<h1>'+ resultData.status.message +'</h1>';
@@ -70,8 +75,8 @@ function updateResult() {
         document.getElementById("main_content").style.display = "none";
         document.getElementById("error_msg").style.display = "block";
     }
-    else if (resultData.status.code == 200) {
-        
+    else { //if (resultData.status.code == ) {
+        console.log("got here")
         resultData.results.sort((a, b) => {               
             return b.total_votes - a.total_votes;
         });
@@ -139,7 +144,7 @@ function updateResult() {
 }
 
 date = new Date();
-document.getElementById("heading_date").innerHTML = "Developer prefer  K8S cluster " + date.getDate() + "-" + date.getMonth() + "-" + date.getYear();
+document.getElementById("heading_date").innerHTML = "Developer prefer the below tool for building K8S cluster<br>(As of Date:" + date.toLocaleString() + ")";
 
 updateResult()
 
