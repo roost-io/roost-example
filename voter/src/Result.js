@@ -6,7 +6,7 @@ import minikube from "./assets/minikube.png";
 import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
-
+const ballot_endpoint = "http://roost-controlplane:30080/"
 class Result extends Component {
   constructor(props) {
     super(props);
