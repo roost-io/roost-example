@@ -1,9 +1,9 @@
-FROM node:10-slim
+FROM node:alpine3.10
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
 WORKDIR /app
-COPY . .
+ADD . .
 RUN npm install
 EXPOSE 3000
-ENTRYPOINT ["npm", "start"]
+ENTRYPOINT ["/usr/local/bin/npm", "start"]
