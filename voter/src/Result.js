@@ -6,40 +6,16 @@ import minikube from "./assets/minikube.png";
 import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
-const ballot_endpoint = "roost-controlplane:30080"
+
+const ballot_endpoint = process.env.REACT_APP_BALLOT_ENDPOINT || "roost-controlplane:30080"
 let date = new Date()
+
 class Result extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      results: [
-        {
-          id: 0,
-          name: "Roost",
-          total_votes: 1,
-        },
-        {
-          id: 1,
-          name: "Docker",
-          total_votes: 5,
-        },
-        {
-          id: 2,
-          name: "Minikube",
-          total_votes: 4,
-        },
-        {
-          id: 3,
-          name: "K3d",
-          total_votes: 0,
-        },
-        {
-          id: 4,
-          name: "kind",
-          total_votes: 0,
-        },
-      ],
-      total: 0,
+      results: [],
+      total_votes: 0,
     };
   }
 
@@ -47,50 +23,22 @@ class Result extends Component {
     fetch(`http://${ballot_endpoint}`, {
       method: "GET",
     })
-      .then((response) => response.json())
       .then((response) => {
-        console.log(response);
+        if (response.ok){
+          return response.json()
+        }
+        throw new Error("ballot service unavailable")
+      })
+      .then((response) => {
+        console.log("In resposnse: ",response);
         date = new Date()
-        const resultData = response;
-        // const resultData = {
-        //   results: [
-        //     {
-        //       id: 0,
-        //       name: "Roost",
-        //       total_votes: 1,
-        //     },
-        //     {
-        //       id: 1,
-        //       name: "Docker",
-        //       total_votes: 5,
-        //     },
-        //     {
-        //       id: 2,
-        //       name: "Minikube",
-        //       total_votes: 4,
-        //     },
-        //     {
-        //       id: 3,
-        //       name: "K3d",
-        //       total_votes: 0,
-        //     },
-        //     {
-        //       id: 4,
-        //       name: "kind",
-        //       total_votes: 0,
-        //     },
-        //   ],
-        // };
-        resultData.results.sort((a, b) => {
-          return b.total_votes - a.total_votes;
-        });
-        let total = 0;
-        resultData.results.forEach((item) => {
-          total += item.total_votes;
-        });
-
-        this.setState({ total: total });
-        this.setState({ results: resultData.results });
+        this.setState({ results: response.results });
+        this.setState({ total_votes: response.total_votes });
+      })
+      .catch((error) =>{
+        console.error("error getting ballot results: ",error)
+        this.setState({results:[]})
+        this.setState({total_votes:0})
       });
   }
 
@@ -101,7 +49,7 @@ class Result extends Component {
           <div className="cardBackgroundContainer">
             <div className="cardBackground"></div>
             <div className="cardBackgroundImage">
-              {candidate.id == 0 ? (
+              {candidate.candidate_id === "roost" ? (
                 <img
                   src={roost}
                   width="150px"
@@ -109,7 +57,7 @@ class Result extends Component {
                   className="image"
                 />
               ) : null}
-              {candidate.id == 1 ? (
+              {candidate.candidate_id === "docker" ? (
                 <img
                   src={docker}
                   width="150px"
@@ -117,7 +65,7 @@ class Result extends Component {
                   className="image"
                 />
               ) : null}
-              {candidate.id == 2 ? (
+              {candidate.candidate_id === "minikube" ? (
                 <img
                   src={minikube}
                   width="150px"
@@ -125,10 +73,10 @@ class Result extends Component {
                   className="image"
                 />
               ) : null}
-              {candidate.id == 3 ? (
+              {candidate.candidate_id === "k3d" ? (
                 <img src={k3d} width="150px" height="150px" className="image" />
               ) : null}
-              {candidate.id == 4 ? (
+              {candidate.candidate_id === "kind" ? (
                 <img
                   src={kind}
                   width="150px"
@@ -139,24 +87,34 @@ class Result extends Component {
             </div>
           </div>
           <div className="cardContent">
-            {candidate.name}
+            {candidate.candidate_id}
             <div class="progressbar_back">
               <div
                 class="progressbar_front"
                 style={{
                   width: `${Math.round(
-                    (candidate.total_votes / this.state.total) * 100
+                    (candidate.vote_count / this.state.total_votes) * 100
                   )}%`,
                 }}
               ></div>
               <div>
-                {Math.round((candidate.total_votes / this.state.total) * 100)}%
+                {Math.round((candidate.vote_count / this.state.total_votes) * 100)}%
               </div>
             </div>
           </div>
         </div>
       );
     };
+    console.log("Result:, ", this.state.results)
+    if (this.state.results === null || this.state.results.length < 1) {
+      return (
+        <div className="Home">
+          <div className="heading">
+            No votes has been given
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="Home">
         <div className="logo">
@@ -166,9 +124,11 @@ class Result extends Component {
             Developers prefer for building K8S cluster, as of {date.toLocaleString()}
         </div>
         <div className="cardContainer">
-          {this.state.results.map((candidate, index) => {
+          {
+          this.state.results.map((candidate, index) => {
             return CustomCard(candidate, index);
-          })}
+          })
+          }
         </div>
       </div>
     );
