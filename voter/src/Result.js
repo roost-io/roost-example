@@ -105,7 +105,6 @@ class Result extends Component {
         </div>
       );
     };
-    console.log("Result:, ", this.state.results)
     if (this.state.results === null || this.state.results.length < 1) {
       return (
         <div className="Home">

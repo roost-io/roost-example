@@ -46,7 +46,7 @@ class Home extends Component {
       .then(response => response.json())
       .then(response => {console.log(response)})
       .catch((error) => {
-        alert("ballot service is not reachable at http://"+ballot_endpoint)
+        console.error("ballot service is not reachable at http://"+ballot_endpoint)
       });
       }
     }
@@ -55,8 +55,6 @@ class Home extends Component {
   render() {
     const handleonCardClick = async (e) => {
       if(this.state.disabled === false) {
-        console.log("event:", e);
-        console.log(e.target.className);
         let targetHtml = e.target.innerHTML;
         let targetElement = e.target;
         if (e.target.className === "cardBackgroundContainer") {
@@ -78,7 +76,6 @@ class Home extends Component {
             targetElement =
             e.target.parentElement.parentElement.parentElement.children[1];
           }
-          console.log("event html:", targetElement.innerHTML);
           await this.setState({ candidate_id: targetElement.innerHTML });
           candidates.forEach((candidate) => {
             if (candidate === targetElement.innerHTML) {
@@ -86,7 +83,6 @@ class Home extends Component {
               this.setState({disabled: true})
           }
         });
-        console.log("selected candidates, ", this.state.candidate_id ,this.state.voter_id)
       }
     };
     const CustomCard = (candidate) => {
