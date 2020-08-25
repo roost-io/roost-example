@@ -40,7 +40,7 @@ spec:
         tty: true
         env:
         - name: REACT_APP_BALLOT_ENDPOINT
-          value: ballot:80
+          value: roost-controlplane:30080
         ports:
         - containerPort: 3000
         imagePullPolicy: Never

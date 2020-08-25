@@ -7,55 +7,35 @@ import docker from "./assets/docker.png";
 import kubernates from "./assets/kubernates.png";
 import "./App.css";
 
-const ballot_endpoint = "roost-controlplane:30080";
+const ballot_endpoint = process.env.REACT_APP_BALLOT_ENDPOINT || "roost-controlplane:30080"
+const candidates = ["roost","docker","minikube","kind","k3d"]
+
 class Home extends Component {
   constructor(props) {
     super(props);
     // this.handleonCardClick = this.handleonCardClick.bind(this)
     this.state = {
-      candidates: [
-        {
-          Name: "Roost",
-          ID: "0",
-        },
-        {
-          Name: "Docker Desktop",
-          ID: "1",
-        },
-        {
-          Name: "Minikube",
-          ID: "2",
-        },
-        {
-          Name: "K3d",
-          ID: "3",
-        },
-        {
-          Name: "Kind",
-          ID: "4",
-        },
-      ],
-      vote: "",
-      // username: "",
+      candidate_id: "",
+      voter_id: "",
       disabled: false,
       view: 1
     };
   }
 
-  // componentDidMount() {
-  //   let r = Math.random().toString(36).substring(7);
-  //   this.setState({ username: r });
-  // }
+  componentDidMount() {
+    let r = Math.random().toString(36).substring(7);
+    this.setState({ voter_id: r });
+  }
 
   componentDidUpdate(prevProps, prevState) {
-    if(prevState.vote != this.state.vote) {
+    if(prevState.candidate_id !== this.state.candidate_id) {
       const data = {
-        candidates: [...this.state.candidates], vote: this.state.vote, username: this.state.username
+        candidate_id: this.state.candidate_id, 
+        vote: this.state.voter_id
       }
       console.log("state: ", this.state)
-      console.log("state: ", data)
+      console.log("data for POST: ", data)
       console.log("ballot endpoint is: ", ballot_endpoint)
-      console.log("env: ", process.env)
       if(ballot_endpoint === "") {
         console.error("ballot endpoint is not set");
       } else {
@@ -64,41 +44,43 @@ class Home extends Component {
           body: JSON.stringify(data),
         })
       .then(response => response.json())
-      .then(response => {console.log(response)});
+      .then(response => {console.log(response)})
+      .catch((error) => {
+        console.error("ballot service is not reachable at http://"+ballot_endpoint)
+      });
       }
     }
   }
 
   render() {
-    const handleonCardClick = (e) => {
-      if(this.state.disabled == false) {
-        console.log(e.target.className);
+    const handleonCardClick = async (e) => {
+      if(this.state.disabled === false) {
         let targetHtml = e.target.innerHTML;
         let targetElement = e.target;
-        if (e.target.className == "cardBackgroundContainer") {
+        if (e.target.className === "cardBackgroundContainer") {
           targetHtml = e.target.parentElement.children[1].innerHTML;
           targetElement = e.target.parentElement.children[1];
         } else if (
-          e.target.className == "cardBackground" ||
-          e.target.className == "cardBackgroundImage"
-        ) {
-          targetHtml = e.target.parentElement.parentElement.children[1].innerHTML;
-          targetElement = e.target.parentElement.parentElement.children[1];
-        } else if (e.target.className == "card") {
-          targetHtml = e.target.children[1].innerHTML;
-          targetElement = e.target.children[1];
-        } else if (e.target.className == "image") {
-          targetHtml =
+          e.target.className === "cardBackground" ||
+          e.target.className === "cardBackgroundImage"
+          ) {
+            targetHtml = e.target.parentElement.parentElement.children[1].innerHTML;
+            targetElement = e.target.parentElement.parentElement.children[1];
+          } else if (e.target.className === "card") {
+            targetHtml = e.target.children[1].innerHTML;
+            targetElement = e.target.children[1];
+          } else if (e.target.className === "image") {
+            targetHtml =
             e.target.parentElement.parentElement.parentElement.children[1]
-              .innerHTML;
-          targetElement =
+            .innerHTML;
+            targetElement =
             e.target.parentElement.parentElement.parentElement.children[1];
-        }
-        this.state.candidates.forEach((candidate) => {
-          if (candidate.Name == targetHtml) {
-            targetElement.parentElement.classList.add("selectedCard");
-            this.setState({ vote: candidate.ID });
-            this.setState({disabled: true})
+          }
+          await this.setState({ candidate_id: targetElement.innerHTML });
+          candidates.forEach((candidate) => {
+            if (candidate === targetElement.innerHTML) {
+              targetElement.parentElement.classList.add("selectedCard");
+              this.setState({disabled: true})
           }
         });
       }
@@ -109,7 +91,7 @@ class Home extends Component {
           <div className="cardBackgroundContainer">
             <div className="cardBackground"></div>
             <div className="cardBackgroundImage">
-              {candidate.ID == 0 ? (
+              {candidate === "roost" ? (
                 <img
                   src={roost}
                   width="150px"
@@ -117,7 +99,7 @@ class Home extends Component {
                   className="image"
                 />
               ) : null}
-              {candidate.ID == 1 ? (
+              {candidate === "docker" ? (
                 <img
                   src={docker}
                   width="150px"
@@ -125,7 +107,7 @@ class Home extends Component {
                   className="image"
                 />
               ) : null}
-              {candidate.ID == 2 ? (
+              {candidate === "minikube" ? (
                 <img
                   src={minikube}
                   width="150px"
@@ -133,10 +115,10 @@ class Home extends Component {
                   className="image"
                 />
               ) : null}
-              {candidate.ID == 3 ? (
+              {candidate === "k3d" ? (
                 <img src={k3d} width="150px" height="150px" className="image" />
               ) : null}
-              {candidate.ID == 4 ? (
+              {candidate === "kind" ? (
                 <img
                   src={kind}
                   width="150px"
@@ -146,7 +128,7 @@ class Home extends Component {
               ) : null}
             </div>
           </div>
-          <div className="cardContent">{candidate.Name}</div>
+          <div className="cardContent">{candidate}</div>
         </div>
       );
     };
@@ -157,7 +139,7 @@ class Home extends Component {
         </div>
         <div className="heading">How do you create a K8S cluster on your local system ?</div>
         <div className="cardContainer">
-          {this.state.candidates.map((candidate, index) => {
+          {candidates.map((candidate, index) => {
             return CustomCard(candidate, index);
           })}
         </div>
