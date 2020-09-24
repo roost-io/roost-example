@@ -19,7 +19,8 @@ import io.roost.ecommerce.service.ProductService;
 
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin("http://localhost:3000")
+// @CrossOrigin("http://localhost:3000")
+@CrossOrigin
 public class ProductController {
     
     private ProductService productService;
