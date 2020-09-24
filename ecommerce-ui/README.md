@@ -14,3 +14,5 @@ This project already has a Dockerfile in it. Just build it either through roost 
 This image expects an environment variable called <strong>REACT_APP_API_URL</strong> in its npm run command i.e. <br>
 <code>REACT_APP_API_URL=roost-utility:8080 npm start</code> should be its startup command if the backend service is running just as a docker container or <br>
 <code>REACT_APP_API_URL=roost-controlplane: NODE_PORT npm start</code> where <strong>NODE_PORT</strong> will be the nodePort of the backend service running in the kubernetes environment. If this environment variable is not mentioned the react app will try to fetch the products from <em>localhost:8080</em> which will not work in these environments.
+
+### This project also includes a yaml file defining all the kubernetes resources required for the ecommerce web app
