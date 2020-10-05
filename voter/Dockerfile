@@ -1,5 +1,5 @@
 # pull official base image
-FROM node:13.12.0-alpine
+FROM node:13.12.0-alpine as builder
 LABEL maintainer="mgdevstack" \
     vendor="Zettabytes" \
     owner="zbio"
@@ -7,18 +7,20 @@ LABEL maintainer="mgdevstack" \
 # set working directory
 WORKDIR /app
 
-# add `/app/node_modules/.bin` to $PATH
-ENV PATH /app/node_modules/.bin:$PATH
-
 # install app dependencies
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm install --silent
-RUN npm install react-scripts@3.4.3 -g --silent
+COPY package*.json ./
+RUN npm install --silent 
 
 # add app
-COPY . ./
+COPY . .
 
-EXPOSE 3000
-# start app
-ENTRYPOINT ["npm", "start"]
+RUN npm run build 
+
+FROM nginx
+
+# map this port to any arbitrary port
+EXPOSE 80
+
+# copy all the build files from the previous step
+COPY --from=builder /app/build /usr/share/nginx/html
+
