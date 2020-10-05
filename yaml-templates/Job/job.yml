@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: image-builder
+  labels:
+    owner: zbio
+    app: job-example
+spec:
+  template:
+    spec:
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - "--dockerfile=Dockerfile"
+        - "--context=dir:///buildSrc"
+        # - "--destination=ballot:v1"  # Destination format is imp, <username>/<imgName>:<tag>
+        - "--cache"
+        - "--cache-dir=/cache"
+        - "--cache-repo=/cache"
+        - "--no-push" # Just build the image don't push
+        - "--tarPath=/buildSrc/img-dest/ballot.tar"
+        # env:
+        # - name: DOCKER_CONFIG
+        #   value: /root/.docker/
+        volumeMounts:
+        - name: build-context
+          mountPath: /buildSrc
+        - name: kaniko-cache
+          mountPath: /cache
+        # - name: kaniko-secret
+        #   mountPath:  /kaniko/.docker
+      restartPolicy: Never
+      volumes:
+      - name: build-context
+        hostPath:
+          path: /tmp/ballot
+          type: Directory
+      - name: kaniko-cache
+        persistentVolumeClaim:
+          claimName: kaniko-cache-claim
