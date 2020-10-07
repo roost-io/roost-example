@@ -8,18 +8,19 @@ metadata:
 spec:
   template:
     spec:
+      backoffLimit: 3 # specifies the number of retries before marking the Job as failed
       containers:
       - name: kaniko
         image: gcr.io/kaniko-project/executor:latest
         args:
         - "--dockerfile=Dockerfile"
         - "--context=dir:///buildSrc"
-        # - "--destination=ballot:v1"  # Destination format is imp, <username>/<imgName>:<tag>
+        - "--destination=ballot:v1"  # Destination format is imp, <username>/<imgName>:<tag>
         - "--cache"
         - "--cache-dir=/cache"
         - "--cache-repo=/cache"
         - "--no-push" # Just build the image don't push
-        - "--tarPath=/buildSrc/img-dest/ballot.tar"
+        - "--tarPath=/buildSrc/ballot.tar"
         # env:
         # - name: DOCKER_CONFIG
         #   value: /root/.docker/
