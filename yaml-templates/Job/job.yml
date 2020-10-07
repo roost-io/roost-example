@@ -6,12 +6,12 @@ metadata:
     owner: zbio
     app: job-example
 spec:
+  backoffLimit: 3 # specifies the number of retries before marking the Job as failed
   template:
     spec:
-      backoffLimit: 3 # specifies the number of retries before marking the Job as failed
       containers:
       - name: kaniko
-        image: gcr.io/kaniko-project/executor:latest
+        image: gcr.io/kaniko-project/executor:debug
         args:
         - "--dockerfile=Dockerfile"
         - "--context=dir:///buildSrc"
