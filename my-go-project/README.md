@@ -34,6 +34,7 @@ kubectl logs service/myapp
 
 > Using browser
 
+* For single-node cluster, try roost-worker instead of roost-controlplane
 * Open <http://roost-controlplane:30047>
 
 ### Following are valid `make` commands
